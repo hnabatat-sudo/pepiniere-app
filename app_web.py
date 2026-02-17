@@ -18,10 +18,10 @@ SCOPE = [
 
 @st.cache_resource
 def init_google_sheets():
-    # 🔥 CORRECTION ICI
-    credentials_dict = dict(st.secrets["google"])
+    credentials_dict = st.secrets["google"]
     creds = ServiceAccountCredentials.from_json_keyfile_dict(credentials_dict, SCOPE)
     return gspread.authorize(creds)
+
 
 client = init_google_sheets()
 SHEET_NAME = "suivi des opérations"
@@ -269,6 +269,7 @@ if st.checkbox("📋 **Historique**"):
 
 st.markdown("---")
 st.markdown("Suivi Pépinière 🌱 | Multi-Traitement FINAL")
+
 
 
 
