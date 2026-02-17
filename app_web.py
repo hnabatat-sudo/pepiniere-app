@@ -22,7 +22,6 @@ def init_google_sheets():
     creds = ServiceAccountCredentials.from_json_keyfile_dict(credentials_dict, SCOPE)
     return gspread.authorize(creds)
 
-
 client = init_google_sheets()
 SHEET_NAME = "suivi des opérations"
 
@@ -36,9 +35,11 @@ ECS = ['1.6', '1.8', '2', '2.5', '3', '3.5', '4']
 
 EXCEL_PRODUITS = "produits.xlsx"
 
-# ---------- SESSION STATE ----------
+# ---------- SESSION STATE AMÉLIORÉ ----------
 if "form_submitted" not in st.session_state:
     st.session_state.form_submitted = False
+if "reset_form" not in st.session_state:
+    st.session_state.reset_form = False
 
 # ---------- CRÉATION AUTOMATIQUE PRODUITS.XLSX ----------
 def create_produits_excel():
@@ -95,17 +96,20 @@ def get_details_produits(selected_noms, produits):
                 break
     return details_produits
 
+def reset_form():
+    """Réinitialise tous les champs du formulaire"""
+    for key in list(st.session_state.keys()):
+        if any(prefix in key for prefix in ['serre', 'deltas', 'culture', 'operation', 'traitements', 'produits', 'solution', 'ec']):
+            del st.session_state[key]
+    st.session_state.reset_form = True
+    st.session_state.form_submitted = False
+
 # ---------- INTERFACE STREAMLIT ----------
 st.set_page_config(
     page_title="Suivi Opérations Pépinière",
     page_icon="🌱",
     layout="wide"
 )
-
-# RESET automatique après succès
-if st.session_state.form_submitted:
-    st.session_state.form_submitted = False
-    st.rerun()
 
 # Sidebar logo et navigation
 with st.sidebar:
@@ -114,10 +118,9 @@ with st.sidebar:
         logo_path = os.path.join(os.path.dirname(__file__), "logo.png")
         logo = Image.open(logo_path)
         st.image(logo, width=120)
-    except Exception as e:
+    except Exception:
         st.markdown("### 🌱")
-        st.write(f"Logo introuvable : {e}")
-
+    
     st.subheader("📦 Produits")
     produits = charger_produits()
 
@@ -146,15 +149,16 @@ with st.sidebar:
 st.title("📊 Suivi Opérations Pépinière")
 st.markdown("**Multi-Delta | Multi-Traitement | Multi-Produits**")
 
+# Formulaire principal avec clés uniques
 col1, col2, col3 = st.columns(3)
 with col1:
-    serre = st.selectbox("**Serre:**", SERRES)
+    serre = st.selectbox("**Serre:**", SERRES, key="serre_key")
 with col2:
-    selected_deltas = st.multiselect("**Deltas:**", DELTAS, max_selections=10)
+    selected_deltas = st.multiselect("**Deltas:**", DELTAS, max_selections=10, key="deltas_key")
 with col3:
-    culture = st.selectbox("**Culture:**", CULTURES)
+    culture = st.selectbox("**Culture:**", CULTURES, key="culture_key")
 
-operation = st.selectbox("**Opération:**", ['traitement', 'irrigation'])
+operation = st.selectbox("**Opération:**", ['traitement', 'irrigation'], key="operation_key")
 
 selected_noms = []
 selected_traitements = []
@@ -168,7 +172,7 @@ if operation == 'traitement':
         selected_traitements = st.multiselect(
             "Catégories:", TRAITEMENTS,
             max_selections=4,
-            help="Sélectionnez fongicide ET insecticide ET ..."
+            key="traitements_key"
         )
     with col_t2:
         st.markdown("**📦 Multi-Produits**")
@@ -176,20 +180,19 @@ if operation == 'traitement':
         selected_noms = st.multiselect(
             "Produits:", noms_produits,
             max_selections=8,
-            help="Tous les produits disponibles"
+            key="produits_key"
         )
-
         if selected_traitements and selected_noms:
             st.caption(f"**{len(selected_traitements)} catégories** | **{len(selected_noms)} produits**")
 
 elif operation == 'irrigation':
     col6, col7 = st.columns(2)
     with col6:
-        solution = st.selectbox("**Solution:**", SOLUTIONS_IRRI)
+        solution = st.selectbox("**Solution:**", SOLUTIONS_IRRI, key="solution_key")
     with col7:
-        ec = st.selectbox("**EC:**", ECS)
+        ec = st.selectbox("**EC:**", ECS, key="ec_key")
 
-# Aperçu en temps réel (RESTÉ INTACT)
+# Aperçu en temps réel
 with st.expander("👀 **Aperçu enregistrement**", expanded=True):
     if operation == 'traitement':
         if selected_traitements:
@@ -213,63 +216,92 @@ with st.expander("👀 **Aperçu enregistrement**", expanded=True):
     **📝 Détails:** {details}
     """)
 
-# Bouton ENREGISTRER
-if st.button(
-    "💾 **ENREGISTRER**",
-    type="primary",
-    use_container_width=True,
-    disabled=st.session_state.form_submitted
-):
+# Bouton ENREGISTRER avec confirmation
+if st.button("💾 **ENREGISTRER**", type="primary", use_container_width=True, disabled=st.session_state.form_submitted):
     if not all([serre, selected_deltas, culture]):
         st.error("❌ **Serre, Deltas et Culture OBLIGATOIRES!**")
     elif operation == 'traitement' and not selected_traitements:
         st.error("❌ **Sélectionnez au moins 1 traitement!**")
+    elif operation == 'irrigation' and not (solution and ec):
+        st.error("❌ **Solution et EC obligatoires pour irrigation!**")
     else:
-        date = datetime.now().strftime("%Y-%m-%d %H:%M")
+        # Modal de confirmation
+        st.markdown("### ✅ **Confirmer l'enregistrement ?**")
+        col_confirm, col_actions = st.columns([2, 1])
+        
+        with col_confirm:
+            st.info(f"""
+            **📝 À enregistrer dans {len(selected_deltas)} delta(s):**
+            • **Serre:** {serre}
+            • **Deltas:** {', '.join(selected_deltas)}
+            • **Culture:** {culture}
+            • **Opération:** {operation}
+            • **Détails:** {details}
+            """)
+        
+        with col_actions:
+            col_yes, col_no = st.columns(2)
+            with col_yes:
+                if st.button("✅ **OUI, Enregistrer**", type="primary", use_container_width=True):
+                    # Enregistrement des données
+                    date = datetime.now().strftime("%Y-%m-%d %H:%M")
+                    success_count = 0
+                    
+                    for delta in selected_deltas:
+                        try:
+                            sheet = get_or_create_sheet(client, f"{serre}{delta}")
+                            row = [date, serre, delta, culture, operation, details]
+                            sheet.append_row(row)
+                            success_count += 1
+                        except Exception as e:
+                            st.error(f"❌ Delta {delta}: {str(e)}")
+                    
+                    if success_count > 0:
+                        st.session_state.form_submitted = True
+                        st.success(f"🎉 **SUCCÈS!** {success_count}/{len(selected_deltas)} delta(s) enregistré(s) avec succès!")
+                        st.balloons()
+                        
+                        # Réinitialisation automatique
+                        reset_form()
+                        st.rerun()
+                    else:
+                        st.error("❌ Aucun delta n'a pu être enregistré!")
+            
+            with col_no:
+                if st.button("❌ **Annuler**", use_container_width=True):
+                    st.rerun()
 
-        if operation == 'traitement':
-            details = "; ".join(selected_traitements)
-            if selected_noms:
-                details_produits = get_details_produits(selected_noms, produits)
-                if details_produits:
-                    details += f" - {'; '.join(details_produits)}"
-        else:
-            details = f"{solution} EC{ec}"
-
-        success_count = 0
-        for delta in selected_deltas:
-            try:
-                sheet = get_or_create_sheet(client, f"{serre}{delta}")
-                row = [date, serre, delta, culture, operation, details]
-                sheet.append_row(row)
-                success_count += 1
-            except Exception as e:
-                st.error(f"❌ Delta {delta}: {e}")
-
-        if success_count > 0:
-            st.session_state.form_submitted = True
-            st.success(f"✅ Opération enregistrée avec succès ! ({success_count}/{len(selected_deltas)})")
-            st.balloons()
+# Message de succès final
+if st.session_state.form_submitted:
+    st.markdown("### 🎊 **Enregistrement terminé !**")
+    st.success("✅ Tous les champs ont été réinitialisés. Prêt pour une nouvelle opération!")
+    st.balloons()
+    
+    col_btn, col_hist = st.columns([1, 3])
+    with col_btn:
+        if st.button("🔄 **Nouvelle Opération**", type="secondary", use_container_width=True):
+            reset_form()
             st.rerun()
 
-# Historique (RESTÉ INTACT)
-if st.checkbox("📋 **Historique**"):
+# Historique
+if st.checkbox("📋 **Afficher Historique**"):
     try:
         if serre and selected_deltas:
             sh = client.open(SHEET_NAME)
-            feuille = sh.worksheet(f"{serre}{selected_deltas[0]}")
-            data = feuille.get_all_values()
-            if len(data) > 1:
-                df = pd.DataFrame(data[1:], columns=data[0])
-                st.dataframe(df.tail(15), use_container_width=True, height=400)
+            if len(selected_deltas) == 1:
+                feuille = sh.worksheet(f"{serre}{selected_deltas[0]}")
+                data = feuille.get_all_values()
+                if len(data) > 1:
+                    df = pd.DataFrame(data[1:], columns=data[0])
+                    st.dataframe(df.tail(15), use_container_width=True, height=400)
+                else:
+                    st.info("📭 Aucun enregistrement pour ce delta")
             else:
-                st.info("📭 Aucun enregistrement")
+                st.warning("⚠️ Sélectionnez un seul delta pour voir l'historique")
+        else:
+            st.info("👆 Sélectionnez une serre et un delta pour voir l'historique")
     except Exception as e:
-        st.error(f"❌ Google Sheets: {e}")
+        st.error(f"❌ Erreur Google Sheets: {str(e)}")
 
 st.markdown("---")
-st.markdown("Suivi Pépinière 🌱 | Multi-Traitement FINAL")
-
-
-
-
+st.markdown("🌱 **Suivi Pépinière - Version Améliorée avec Confirmation & Reset**")
