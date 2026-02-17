@@ -18,7 +18,8 @@ SCOPE = [
 
 @st.cache_resource
 def init_google_sheets():
-    credentials_dict = json.loads(st.secrets["google"]["credentials"])
+    # 🔥 CORRECTION ICI
+    credentials_dict = dict(st.secrets["google"])
     creds = ServiceAccountCredentials.from_json_keyfile_dict(credentials_dict, SCOPE)
     return gspread.authorize(creds)
 
@@ -267,4 +268,4 @@ if st.checkbox("📋 **Historique**"):
         st.error(f"❌ Google Sheets: {e}")
 
 st.markdown("---")
-st.markdown("*Suivi Pépinière 🌱 | Multi-Traitement FINAL*")
+st.markdown("*Suivi Pépinière 🌱 |
