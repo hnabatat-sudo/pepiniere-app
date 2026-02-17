@@ -268,4 +268,6 @@ if st.checkbox("📋 **Historique**"):
         st.error(f"❌ Google Sheets: {e}")
 
 st.markdown("---")
-st.markdown("*Suivi Pépinière 🌱 |
+st.markdown("Suivi Pépinière 🌱 | Multi-Traitement FINAL")
+|
+
