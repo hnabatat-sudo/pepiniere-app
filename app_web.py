@@ -28,7 +28,7 @@ SHEET_NAME = "suivi des opérations"
 
 SERRES = ['B', 'C', 'D', 'E', 'F', 'G', 'H']
 DELTAS = [str(i) for i in range(1, 33)]
-CULTURES = ['tomate', 'pastèque', 'poivron', 'concombre', 'laitue', 'ciboulette', 'courgette', 'herbes aromatiques']
+CULTURES = ['tomate', 'pastèque', 'melon','poivron', 'concombre', 'laitue', 'ciboulette', 'courgette', 'herbes aromatiques']
 TRAITEMENTS = ['fongicide', 'insecticide', 'acaricide', 'insecticide/acaricide', 'raticide',
                'bio-stimulant', 'désinfectant', 'engrais foliaire']
 SOLUTIONS_IRRI = ['AB', 'CD', 'M', 'Urée', 'enracineur', 'désinfectant']
@@ -253,4 +253,5 @@ if st.checkbox("📋 **Historique**") and serre and selected_deltas:
 
 st.markdown("---")
 st.markdown("🌱 **Suivi Pépinière - Simple & Efficace**")
+
 
