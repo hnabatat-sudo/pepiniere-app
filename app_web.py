@@ -31,7 +31,7 @@ DELTAS = [str(i) for i in range(1, 33)]
 CULTURES = ['tomate', 'pastèque', 'melon','poivron', 'concombre', 'laitue', 'ciboulette', 'courgette', 'herbes aromatiques']
 TRAITEMENTS = ['fongicide', 'insecticide', 'acaricide', 'insecticide/acaricide', 'raticide',
                'bio-stimulant', 'désinfectant', 'engrais foliaire']
-SOLUTIONS_IRRI = ['AB', 'CD', 'M', 'Urée', 'enracineur', 'désinfectant']
+SOLUTIONS_IRRI = ['AB', 'CD', 'M', 'Urée', 'enracineur','Ecovigor', 'désinfectant']
 ECS = ['1.6', '1.8', '2', '2.5', '3', '3.5', '4']
 
 EXCEL_PRODUITS = "produits.xlsx"
@@ -253,5 +253,6 @@ if st.checkbox("📋 **Historique**") and serre and selected_deltas:
 
 st.markdown("---")
 st.markdown("🌱 **Suivi Pépinière - Simple & Efficace**")
+
 
 
