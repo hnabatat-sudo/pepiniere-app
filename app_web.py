@@ -113,10 +113,18 @@ def reset_form():
 
 
 # ---------- INTERFACE STREAMLIT ----------
+# ---------- INTERFACE STREAMLIT ----------
 st.set_page_config(
     page_title="Suivi Opérations Pépinière",
-    page_icon="🌱",
+    page_icon="logo.png",  # Logo aussi dans l’onglet navigateur
     layout="wide"
+)
+
+# Sidebar logo et navigation
+with st.sidebar:
+    st.image("logo.png", width=120)
+    st.title("🌱 Pépinière")
+
 )
 
 # Sidebar
@@ -253,6 +261,7 @@ if st.checkbox("📋 **Historique**") and serre and selected_deltas:
 
 st.markdown("---")
 st.markdown("🌱 **Suivi Pépinière - Simple & Efficace**")
+
 
 
 
