@@ -116,20 +116,22 @@ def reset_form():
 # ---------- INTERFACE STREAMLIT ----------
 st.set_page_config(
     page_title="Suivi Opérations Pépinière",
-    page_icon="logo.png",  # Logo aussi dans l’onglet navigateur
+    page_icon="🌱",
     layout="wide"
 )
 
 # Sidebar logo et navigation
 with st.sidebar:
-    st.image("logo.png", width=120)
     st.title("🌱 Pépinière")
+    try:
+        # Chemin relatif par rapport au script
+        logo_path = os.path.join(os.path.dirname(__file__), "logo.png")
+        logo = Image.open(logo_path)
+        st.image(logo, width=120)
+    except Exception as e:
+        st.markdown("### 🌱")
+        st.write(f"Logo introuvable : {e}")
 
-)
-
-# Sidebar
-with st.sidebar:
-    st.title("🌱 Pépinière")
 
     st.subheader("📦 Produits")
     produits = charger_produits()
@@ -261,6 +263,7 @@ if st.checkbox("📋 **Historique**") and serre and selected_deltas:
 
 st.markdown("---")
 st.markdown("🌱 **Suivi Pépinière - Simple & Efficace**")
+
 
 
 
