@@ -169,7 +169,7 @@ col1, col2, col3 = st.columns(3)
 with col1:
     serre = st.selectbox("**Serre:**", SERRES)
 with col2:
-    selected_deltas = st.multiselect("**Deltas:**", DELTAS, max_selections=10)
+    selected_deltas = st.multiselect("**Deltas:**", DELTAS, max_selections=32)
 with col3:
     culture = st.selectbox("**Culture:**", CULTURES)
 
@@ -263,6 +263,7 @@ if st.checkbox("📋 **Historique**") and serre and selected_deltas:
 
 st.markdown("---")
 st.markdown("🌱 **Suivi Pépinière - Simple & Efficace**")
+
 
 
 
